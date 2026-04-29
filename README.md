@@ -16,14 +16,12 @@ cd Exemplo-Django-CleanArch-Produtos
 ### 2. Criar e ativar o ambiente virtual
 
 ```bash
-# Criar o venv
+# Criar o venv no terminal 
 python -m venv venv
 
 # Ativar (Windows PowerShell)
-venv\Scripts\Activate.ps1
+venv\Scripts\activate
 
-# Ativar (Windows CMD)
-venv\Scripts\activate.bat
 ```
 
 ### 3. Instalar as dependências
@@ -31,10 +29,6 @@ venv\Scripts\activate.bat
 ```bash
 pip install -r requirements.txt
 ```
-
-> As dependências são:
-> - `Django 6.0.4`
-> - `djangorestframework 3.17.1`
 
 ### 4. Criar o banco de dados
 
