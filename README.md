@@ -48,6 +48,53 @@ python manage.py runserver
 O servidor estará disponível em: `http://127.0.0.1:8000`
 
 ---
+## 🔀 Fluxo do sistema
+
+**1. Usuário Web / Frontend**
+
+> O usuário clica em um botão no siste e faz uma requisição ```HTTP GET``` para URL /api/v1/medicos/.
+
+**2. Roteador (```urls.py```)**
+
+> O Django recebe o link, olha no mapa de rotas (urls.py) e diz: *"Essa URL pertence ao MedicoViewSet"*. E encaminha a requisição para lá.
+
+**3. View (```api/view.py```)**
+ 
+> A View é a recepcionista. Ela recebe o pedido do usuário (request), mas ela não tem permissão para ir ao estoque (Banco de Dados), nem tomar decisões (Regras de negócio). O que ela faz? Ela chama o gerente da área específica que ela quer (Service). Exemplo: ```service = MedicoService() -> service.listar_medicos()```
+
+**4. Service ```application/services.py```**
+
+> O Service é o cérebro (Regra de negócio juntamente com os testes). Ele pensa: *"Preciso listar os médicos, mas não sei como falar com o banco de dados"* O que ele faz? Ele pede para o "estoquista": o **Repository.** Exemplo: ```self.repository.get_all()```
+
+**5. Repository (```infrastructure/repositories.py```)**
+
+> O Repository é o cara que sabe falar com o MySQL usando a linguagem do Django ORM. Ele vai no banco (Medico.objects.all()), pega os dados brutos (Models "sujos" cheios de dependências do banco) e entrega de volta para o Gerente (service).
+
+**6. Service ```retorno```**
+
+> O Service pega aqueles dados brutos do Repository. Como regra da Clean Architecture proíbe enviar Models do banco de dados diretamente para fora, ele tira os dados do Model e os coloca em uma caixa limpinha e independente: o DTO (```Medico DTO```). O Service então devolve essa caixa limpa (**DTO**) para a Recepcionista (**View**).
+
+**7. View (```retorno```)**
+
+> A View agora está com o MedicoDTO nas mãos. Mas a internet (o navegador do usuário) não sabe ler objetos do Python (```@dataclass```), ela só entende formato texto (**JSON**). O que a View faz? Ela chama o Tradutor: o ```Serializer```. Exemplo: ```serializer = MedicoDTOSerializer(medicos_dto)
+
+**8. Serializer (```api/serializers.py```)**
+
+> O Serializer traduz a caixa ```MedicoDTO``` em um texto JSON estruturado: ```[ {"id": 1, "nome": "Dr. Silva", "crm": "123"} ]```
+
+**9. View (```finalização```)**
+
+> A View pega esse JSON traduzido, coloca um selo de *"Tudo certo! (Status HTTP 200 OK)"* e envia de volta (Response pela internet.)
+
+**10. Usuário Web / Front-end (```Destino```)**
+
+> O site do usuário recebe o JSON, lê e mostra a lista de médicos na tela.
+
+### Resumo rápido:
+
+```Browser``` ➔ ```urls.py``` ➔ ```View``` ➔ ```Service``` ➔ ```Repository``` ➔ ```(MySQL)``` ➔ ```Repository``` ➔ ```Service (empacota em DTO)``` ➔ ```View (pede pro Serializer virar JSON)``` ➔ ```Browser```
+
+---
 
 ## 📡 Endpoints disponíveis
 
