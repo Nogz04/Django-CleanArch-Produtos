@@ -52,47 +52,47 @@ O servidor estará disponível em: `http://127.0.0.1:8000`
 
 **1. Usuário Web / Frontend**
 
-> O usuário clica em um botão no site e faz uma requisição ```HTTP GET``` para URL /api/v1/medicos/.
+> O usuário preenche um formulário no site e faz uma requisição ```HTTP POST``` para a URL `/api/produtos/criar/`.
 
 **2. Roteador (```urls.py```)**
 
-> O Django recebe o link, olha no mapa de rotas (urls.py) e diz: *"Essa URL pertence ao MedicoViewSet"*. E encaminha a requisição para lá.
+> O Django recebe o link, olha no mapa de rotas (`urls.py`) e diz: *"Essa URL pertence à CriarProdutoView"*. E encaminha a requisição para lá.
 
-**3. View (```api/view.py```)**
+**3. View (```api/views.py```)**
  
-> A View é a recepcionista. Ela recebe o pedido do usuário (request), mas ela não tem permissão para ir ao estoque (Banco de Dados), nem tomar decisões (Regras de negócio). O que ela faz? Ela chama o gerente da área específica que ela quer (Service). Exemplo: ```service = MedicoService() -> service.listar_medicos()```
+> A View é a recepcionista. Ela recebe o pedido do usuário (request), mas não tem permissão para ir ao estoque (Banco de Dados), nem tomar decisões (Regras de negócio). O que ela faz? Ela chama o gerente da área específica que ela quer (Service). Exemplo: ```service = ProdutoService(); service.criar_produto(dados)```
 
-**4. Service ```application/services.py```**
+**4. Service (```application/services.py```)**
 
-> O Service é o cérebro (Regra de negócio juntamente com os testes). Ele pensa: *"Preciso listar os médicos, mas não sei como falar com o banco de dados"* O que ele faz? Ele pede para o "estoquista": o **Repository.** Exemplo: ```self.repository.get_all()```
+> O Service é o cérebro (Regra de negócio juntamente com os testes). Ele pensa: *"Preciso criar um produto e calcular o preço de venda, mas não sei como falar com o banco de dados"*. O que ele faz? Ele pede para o "estoquista": o **Repository.** Exemplo: ```self.repository.create(produto_entity)```
 
 **5. Repository (```infrastructure/repositories.py```)**
 
-> O Repository é o cara que sabe falar com o MySQL usando a linguagem do Django ORM. Ele vai no banco (Medico.objects.all()), pega os dados brutos (Models "sujos" cheios de dependências do banco) e entrega de volta para o Gerente (service).
+> O Repository é o cara que sabe falar com o banco de dados usando a linguagem do Django ORM. Ele vai no banco (`Produto.objects.create(...)`), salva os dados brutos (Models "sujos" cheios de dependências do banco) e entrega de volta para o Gerente (Service).
 
 **6. Service ```retorno```**
 
-> O Service pega aqueles dados brutos do Repository. Como regra da Clean Architecture proíbe enviar Models do banco de dados diretamente para fora, ele tira os dados do Model e os coloca em uma caixa limpinha e independente: o DTO (```Medico DTO```). O Service então devolve essa caixa limpa (**DTO**) para a Recepcionista (**View**).
+> O Service pega aqueles dados brutos do Repository. Como a regra da Clean Architecture proíbe enviar Models do banco de dados diretamente para fora, ele tira os dados do Model e os coloca em uma caixa limpinha e independente: o DTO (```ProdutoDTO```). O Service então devolve essa caixa limpa (**DTO**) para a Recepcionista (**View**).
 
 **7. View (```retorno```)**
 
-> A View agora está com o MedicoDTO nas mãos. Mas a internet (o navegador do usuário) não sabe ler objetos do Python (```@dataclass```), ela só entende formato texto (**JSON**). O que a View faz? Ela chama o Tradutor: o ```Serializer```. Exemplo: ```serializer = MedicoDTOSerializer(medicos_dto)
+> A View agora está com o ProdutoDTO nas mãos. Mas a internet (o navegador do usuário) não sabe ler objetos do Python (```@dataclass```), ela só entende formato texto (**JSON**). O que a View faz? Ela chama o Tradutor: o ```Serializer```. Exemplo: ```serializer = ProdutoDTOSerializer(produto_dto)```
 
 **8. Serializer (```api/serializers.py```)**
 
-> O Serializer traduz a caixa ```MedicoDTO``` em um texto JSON estruturado: ```[ {"id": 1, "nome": "Dr. Silva", "crm": "123"} ]```
+> O Serializer traduz a caixa ```ProdutoDTO``` em um texto JSON estruturado: ```{ "id": 1, "nome": "Notebook Dell", "precoVenda": "3750.00", "descricao": "Notebook com 16GB RAM" }```
 
 **9. View (```finalização```)**
 
-> A View pega esse JSON traduzido, coloca um selo de *"Tudo certo! (Status HTTP 200 OK)"* e envia de volta (Response pela internet.)
+> A View pega esse JSON traduzido, coloca um selo de *"Tudo certo! (Status HTTP 201 Created)"* e envia de volta (Response pela internet.)
 
 **10. Usuário Web / Front-end (```Destino```)**
 
-> O site do usuário recebe o JSON, lê e mostra a lista de médicos na tela.
+> O site do usuário recebe o JSON, lê e mostra a confirmação de criação do produto na tela.
 
 ### Resumo rápido:
 
-```Browser``` ➔ ```urls.py``` ➔ ```View``` ➔ ```Service``` ➔ ```Repository``` ➔ ```(MySQL)``` ➔ ```Repository``` ➔ ```Service (empacota em DTO)``` ➔ ```View (pede pro Serializer virar JSON)``` ➔ ```Browser```
+```Browser``` ➔ ```urls.py``` ➔ ```View``` ➔ ```Service``` ➔ ```Repository``` ➔ ```(Banco de Dados)``` ➔ ```Repository``` ➔ ```Service (empacota em DTO)``` ➔ ```View (pede pro Serializer virar JSON)``` ➔ ```Browser```
 
 ---
 
