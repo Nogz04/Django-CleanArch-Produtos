@@ -52,7 +52,7 @@ O servidor estará disponível em: `http://127.0.0.1:8000`
 
 **1. Usuário Web / Frontend**
 
-> O usuário clica em um botão no siste e faz uma requisição ```HTTP GET``` para URL /api/v1/medicos/.
+> O usuário clica em um botão no site e faz uma requisição ```HTTP GET``` para URL /api/v1/medicos/.
 
 **2. Roteador (```urls.py```)**
 
